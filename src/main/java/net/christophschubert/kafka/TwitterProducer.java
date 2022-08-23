@@ -74,6 +74,9 @@ public class TwitterProducer {
         final Properties settings = new Properties();
         if (args.length > 0) {
             settings.load(new FileReader(args[0]));
+        } else {
+            System.err.println("required argument property path is missing");
+            System.exit(1);
         }
 
         // Set up a blocking queue: adjust capacity to fit throughput of your stream if needed
@@ -88,7 +91,7 @@ public class TwitterProducer {
 
         final var kafkaTopic = Objects.toString(settings.get(TOPIC_CONFIG), "feed_raw");
         while (!hoseBirdClient.isDone()) {
-            final String msg = msgQueue.take();
+            final var msg = msgQueue.take().stripTrailing();
             final var producerRecord = new ProducerRecord<String, String>(kafkaTopic,null, msg);
             producer.send(producerRecord, ((metadata, exception) -> {
                 if (exception != null) {
